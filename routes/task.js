@@ -13,6 +13,11 @@ router.post("/createtask/:workspaceId", async (req, res) => {
   try {
     const task = new Task({ name, description, status, workspaceId });
     await task.save();
+    await Workspace.updateOne(
+      { _id: workspaceId },
+      { $push: { tasklist: task._id } }
+    );
+
     res.json({ message: "Task created" });
   } catch (err) {
     return res.status(422).json({ error: err.message });
