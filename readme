@@ -3,4 +3,9 @@ auth: router for sign up and sign in. Using JWT token to mã hóa. Using middlew
 workspace: router to create and get Workspace. Each workspace have unique id (create by default of mongodb \_id) and tasklist array and member. Have model is worklist.
 Task: in progress, currently the createtask api can work.
 
+HOW TO RUN:
+npm start
+
+
+
 NOTE: PORT: 8000
