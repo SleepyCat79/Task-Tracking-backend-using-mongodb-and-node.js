@@ -1,0 +1,6 @@
+routes folders: router store:
+auth: router for sign up and sign in. Using JWT token to mã hóa. Using middleware checktoken(check if that User is exist or not) and models User.js that have name, email and password with unique id.
+workspace: router to create and get Workspace. Each workspace have unique id (create by default of mongodb \_id) and tasklist array and member. Have model is worklist.
+Task: in progress, currently the createtask api can work.
+
+NOTE: PORT: 8000
