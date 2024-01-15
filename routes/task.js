@@ -24,4 +24,16 @@ router.post("/createtask/:workspaceId", async (req, res) => {
   }
 });
 
+router.get("/gettasks/:workspaceId", async (req, res) => {
+  const { workspaceId } = req.params;
+  try {
+    const workspace = await Workspace.findById(workspaceId).populate(
+      "tasklist"
+    );
+    res.json({ tasks: workspace.tasklist });
+  } catch (err) {
+    return res.status(422).json({ error: err.message });
+  }
+});
+
 module.exports = router;

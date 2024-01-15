@@ -10,10 +10,12 @@ const WorkspaceSchema = new mongoose.Schema({
     type: String,
     required: false,
   },
-  tasklist: {
-    type: Array,
-    required: false,
-  },
+  tasklist: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Task",
+    },
+  ],
   users: {
     type: Array,
     required: false,
