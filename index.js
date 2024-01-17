@@ -9,6 +9,8 @@ const cors = require("cors");
 require("./models/Users");
 require("./models/Worklist");
 require("./models/Tasklist");
+require("./models/UserWeb");
+require("./models/WorkspaceWeb");
 const authRoutes = require("./routes/auth");
 const checkToken = require("./middleware/checkToken");
 const workspaceRoutes = require("./routes/workspace");
