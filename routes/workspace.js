@@ -38,7 +38,7 @@ router.delete("/workspace/", async (req, res) => {
 });
 
 router.get("/workspace", async (req, res) => {
-  const { userID } = req.body;
+  const { userID } = req.query;
   try {
     const workspaces = await Workspace.find({ users: userID });
     res.json({ workspaces });

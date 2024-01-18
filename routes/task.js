@@ -37,14 +37,15 @@ router.post("/Task", async (req, res) => {
 });
 //get task
 router.get("/Task", async (req, res) => {
-  const { workspaceID } = req.body;
+  const { workspaceID } = req.query;
   try {
-    const workspace = await Workspace.findById(workspaceID);
+    const workspace = await Workspace.findById(workspaceID).populate(
+      "tasklist"
+    );
     if (!workspace) {
       return res.status(422).json({ error: "Workspace not found" });
     }
-    const tasklist = workspace.tasklist;
-    res.json({ tasklist });
+    res.json({ tasklist: workspace.tasklist });
   } catch (err) {
     return res.status(422).json({ error: err.message });
   }
