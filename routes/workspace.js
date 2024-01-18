@@ -6,17 +6,6 @@ const Workspace = mongoose.model("Workspace");
 const jwt = require("jsonwebtoken");
 const JWT_SECRET = require("../secrets").jwtkey;
 
-
-router.get("/getwp/:userId", async (req, res) => {
-  const { userId } = req.params;
-  try {
-    const workspaces = await Workspace.find({ owner: userId });
-    res.json({ workspaces });
-  } catch (err) {
-    return res.status(422).json({ error: err.message });
-  }
-});
-
 router.post("/worksace", async (req, res) => {
   const { userID, name, description } = req.body;
   try {
@@ -41,5 +30,56 @@ router.get("/workspace", async (req, res) => {
     return res.status(422).json({ error: err.message });
   }
 })
+
+router.get("/members", async (req, res) => {
+  const { workspaceID } = req.body;
+  try {
+    const workspace = await Workspace.findById(workspaceID).populate("users");
+    if (!workspace) {
+      return res.status(404).json({ error: "Workspace not found" });
+    }
+    res.json(workspace.users);
+  } catch (err) {
+    return res.status(422).json({ error: err.message });
+  }
+});
+
+router.post("/members", async (req, res) => {
+  const { workspaceID, email } = req.body;
+  try {
+    const user = await User.findOne({ email: email });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    const workspace = await Workspace.findByIdAndUpdate(
+      workspaceID,
+      { $push: { users: user._id } },
+      { new: true }
+    );
+    if (!workspace) {
+      return res.status(404).json({ error: "Workspace not found" });
+    }
+    res.json(workspace);
+  }
+  catch (err) {
+    return res.status(422).json({ error: err.message });
+  }
+
+});
+
+router.delete("/members", async (req, res) => {
+  const { workspaceID, userID } = req.body;
+  try {
+    const workspace = await Workspace.findByIdAndUpdate(
+      workspaceID,
+      { $pull: { users: userID } },
+      { new: true }
+    );
+    if (!workspace) {
+      return res.status(404).json({ error: "Workspace not found" });
+    }
+    res.json(workspace);
+  } catch (err) { return res.status(422).json({ error: err.message }); }
+});
 
 module.exports = router;

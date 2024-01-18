@@ -6,8 +6,6 @@ const Workspace = mongoose.model("Workspace");
 const Task = mongoose.model("Task");
 const jwt = require("jsonwebtoken");
 const JWT_SECRET = require("../secrets").jwtkey;
-
-///WEB-----------------------------------------------------------------------------------------------------------------
 //get todolist for user with their id
 router.get("/toDoList", async (req, res) => {
   const { userID } = req.body;
@@ -73,6 +71,37 @@ router.put("/toDoList", async (req, res) => {
     res.json(user);
   }
   catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+
+});
+
+/// create task for workspace 
+router.post("/task", async (req, res) => {
+  const { WorkspaceID, task } = req.body;
+  try {
+    const workspace = await Workspace.findById(WorkspaceID);
+    if (!workspace) {
+      return res.status(404).json({ error: "Workspace not found" });
+    }
+    const newTask = new Task({
+      name: task.name,
+      description: task.description,
+      users: task.users,
+      subtasks: task.subtasks,
+      startDate: task.startDate,
+      deadline: task.deadline,
+      status: task.status,
+      workspaceId: WorkspaceID,
+    });
+    await newTask.save();
+    await Workspace.findByIdAndUpdate(
+      WorkspaceID,
+      { $push: { tasklist: newTask._id } },
+      { new: true }
+    );
+    res.json(newTask);
+  } catch (err) {
     return res.status(500).json({ error: err.message });
   }
 
