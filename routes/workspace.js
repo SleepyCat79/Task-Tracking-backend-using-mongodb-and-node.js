@@ -3,21 +3,37 @@ const mongoose = require("mongoose");
 const router = express.Router();
 const User = mongoose.model("User");
 const Workspace = mongoose.model("Workspace");
-const jwt = require("jsonwebtoken");
-const JWT_SECRET = require("../secrets").jwtkey;
-
-router.post("/worksace", async (req, res) => {
+const Task = mongoose.model("Task");
+router.post("/workspace", async (req, res) => {
   const { userID, name, description } = req.body;
   try {
     const owner = await User.findById(userID);
     if (!owner) {
       return res.status(422).json({ error: "User not found" });
     }
-    const workspace = new Workspace({ name, description, users: [owner], owner });
+    const workspace = new Workspace({
+      name,
+      description,
+      users: [owner._id],
+      owner: owner._id,
+    });
     await workspace.save();
     res.json({ status: "success", message: "Workspace created" });
   } catch (err) {
     return res.status(422).json({ error: err.message });
+  }
+});
+router.delete("/workspace/", async (req, res) => {
+  const { id } = req.body;
+  try {
+    const workspace = await Workspace.findById(id);
+    if (!workspace) {
+      return res.status(404).json({ error: "Workspace not found" });
+    }
+    await Workspace.deleteOne({ _id: id });
+    res.json({ status: "success", message: "Workspace deleted" });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
   }
 });
 
@@ -29,7 +45,7 @@ router.get("/workspace", async (req, res) => {
   } catch (err) {
     return res.status(422).json({ error: err.message });
   }
-})
+});
 
 router.get("/members", async (req, res) => {
   const { workspaceID } = req.body;
@@ -60,11 +76,9 @@ router.post("/members", async (req, res) => {
       return res.status(404).json({ error: "Workspace not found" });
     }
     res.json(workspace);
-  }
-  catch (err) {
+  } catch (err) {
     return res.status(422).json({ error: err.message });
   }
-
 });
 
 router.delete("/members", async (req, res) => {
@@ -79,7 +93,9 @@ router.delete("/members", async (req, res) => {
       return res.status(404).json({ error: "Workspace not found" });
     }
     res.json(workspace);
-  } catch (err) { return res.status(422).json({ error: err.message }); }
+  } catch (err) {
+    return res.status(422).json({ error: err.message });
+  }
 });
 
 module.exports = router;

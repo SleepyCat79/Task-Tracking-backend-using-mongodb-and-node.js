@@ -9,16 +9,20 @@ const TasklistSchema = new mongoose.Schema({
     type: String,
     required: false,
   },
-  users: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
-  }],
-  subtasks: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "SubTask",
-    required: false,
-  }],
+  users: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+  ],
+  subtasks: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "SubTask",
+      required: false,
+    },
+  ],
   startDate: {
     type: Date,
     required: true,
@@ -43,6 +47,7 @@ const subTaskSchema = new mongoose.Schema({
   },
   state: {
     type: Boolean,
+    default: false,
   },
 });
 mongoose.model("SubTask", subTaskSchema);

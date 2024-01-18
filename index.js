@@ -10,7 +10,6 @@ require("./models/Users");
 require("./models/Worklist");
 require("./models/Tasklist");
 const authRoutes = require("./routes/auth");
-const checkToken = require("./middleware/checkToken");
 const workspaceRoutes = require("./routes/workspace");
 const taskRoutes = require("./routes/task");
 app.use(cors());
@@ -19,9 +18,8 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 app.use(authRoutes);
-app.use(workspaceRoutes);
 app.use(taskRoutes);
-
+app.use(workspaceRoutes);
 mongoose
   .connect(mongourl, {
     useNewUrlParser: true,
@@ -36,11 +34,10 @@ mongoose
 
 app.post("/", async (req, res) => {
   console.log(req.body);
+  console.log("POST /workspace route hit");
+
   res.send("ok");
 });
 app.listen(port, () => {
   console.log("Server is running on port 8000");
-});
-app.get("/", checkToken, (req, res) => {
-  res.send("Your email is " + req.user.email);
 });

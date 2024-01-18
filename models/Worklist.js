@@ -15,11 +15,13 @@ const WorkspaceSchema = new mongoose.Schema({
       ref: "Task",
     },
   ],
-  users: [[{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
-  }]],
+  users: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+  ],
   owner: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",

@@ -4,17 +4,98 @@ const router = express.Router();
 const User = mongoose.model("User");
 const Workspace = mongoose.model("Workspace");
 const Task = mongoose.model("Task");
+const SubTask = mongoose.model("SubTask");
 const jwt = require("jsonwebtoken");
 const JWT_SECRET = require("../secrets").jwtkey;
+
+//create task
+router.post("/Task", async (req, res) => {
+  const { workspaceID, name, description, startDate, deadline } = req.body;
+  try {
+    const workspace = await Workspace.findById(workspaceID);
+    if (!workspace) {
+      return res.status(422).json({ error: "Workspace not found" });
+    }
+    const status = new Date(startDate) > new Date() ? "upcoming" : "inprogress";
+    const task = new Task({
+      name,
+      description,
+      workspaceId: workspace._id,
+      startDate,
+      deadline,
+      status,
+    });
+    await task.save();
+    await Workspace.updateOne(
+      { _id: workspaceID },
+      { $push: { tasklist: task._id } }
+    );
+    res.json({ status: "success", message: "Task created" });
+  } catch (err) {
+    return res.status(422).json({ error: err.message });
+  }
+});
+//get task
+router.get("/Task", async (req, res) => {
+  const { workspaceID } = req.body;
+  try {
+    const workspace = await Workspace.findById(workspaceID);
+    if (!workspace) {
+      return res.status(422).json({ error: "Workspace not found" });
+    }
+    const tasklist = workspace.tasklist;
+    res.json({ tasklist });
+  } catch (err) {
+    return res.status(422).json({ error: err.message });
+  }
+});
+//delete task
+router.delete("/Task", async (req, res) => {
+  const { workspaceID, taskID } = req.body;
+  try {
+    const workspace = await Workspace.findById(workspaceID);
+    if (!workspace) {
+      return res.status(422).json({ error: "Workspace not found" });
+    }
+    await Task.deleteOne({ _id: taskID });
+    await Workspace.updateOne(
+      { _id: workspaceID },
+      { $pull: { tasklist: taskID } }
+    );
+    res.json({ status: "success", message: "Task deleted" });
+  } catch (err) {
+    return res.status(422).json({ error: err.message });
+  }
+});
+//update task
+router.put("/Task", async (req, res) => {
+  const { workspaceID, taskID, name, description, startDate, deadline } =
+    req.body;
+  try {
+    const workspace = await Workspace.findById(workspaceID);
+    if (!workspace) {
+      return res.status(422).json({ error: "Workspace not found" });
+    }
+    const status = new Date(startDate) > new Date() ? "upcoming" : "inprogress";
+    await Task.updateOne(
+      { _id: taskID },
+      { name, description, startDate, deadline, status }
+    );
+    res.json({ status: "success", message: "Task updated" });
+  } catch (err) {
+    return res.status(422).json({ error: err.message });
+  }
+});
+
 //get todolist for user with their id
 router.get("/toDoList", async (req, res) => {
   const { userID } = req.body;
   try {
-    const user = await User.findById(userID)
+    const user = await User.findById(userID);
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
-    const toDoList = user.todoList;
+    const toDoList = user.toDOList;
     res.json({ toDoList });
   } catch (err) {
     return res.status(422).json({ error: err.message });
@@ -23,86 +104,52 @@ router.get("/toDoList", async (req, res) => {
 module.exports = router;
 //post todolist for user with their id
 router.post("/toDoList", async (req, res) => {
-  const { userID, task } = req.body;
+  const { userID, name } = req.body;
   try {
-    const user = await UserWeb.findByIdAndUpdate(
-      userID,
-      { $push: { todoList: { name: task, status: false } } },
-      { new: true }
-    );
+    const user = await User.findById(userID);
+    const todo = new SubTask({
+      name,
+    });
+    await todo.save();
+    await User.updateOne({ _id: user._id }, { $push: { toDOList: todo._id } });
+    console.log(user); // Log the updated user
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
-    res.json(user);
+    res.json({ message: "toDolist added", user }); // Include the user in the response
   } catch (err) {
+    console.error(err); // Log any error
     return res.status(500).json({ error: err.message });
   }
-
 });
-//delete todolist for user with their id  
+//delete todolist for user with their id
 router.delete("/toDoList", async (req, res) => {
-  const { userID, taskID } = req.body;
+  const { userID, todoID } = req.body;
   try {
-    const user = await UserWeb.findByIdAndUpdate(
-      userID,
-      { $pull: { todoList: { _id: taskID } } },
-      { new: true }
-    );
+    const user = await User.findById(userID);
     if (!user) {
-      return res.status(404).json({ error: "User not found" });
+      return res.status(422).json({ error: "User not found" });
     }
-    res.json(user);
+    await SubTask.deleteOne({ _id: todoID });
+    await User.updateOne({ _id: userID }, { $pull: { toDOList: todoID } });
+    res.json({ status: "success", message: "Todo deleted" });
   } catch (err) {
-    return res.status(500).json({ error: err.message });
+    return res.status(422).json({ error: err.message });
   }
 });
 //update todolist for user with their id
 router.put("/toDoList", async (req, res) => {
-  const { userID, taskID } = req.body;
+  const { toDoID, name, state } = req.body;
   try {
-    const user = await UserWeb.findOneAndUpdate(
-      { _id: userID, "todoList._id": taskID },
-      { $set: { "todoList.$.status": true } },
-      { new: true }
+    const updatedSubTask = await SubTask.updateOne(
+      { _id: toDoID },
+      { name, state }
     );
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
+    if (updatedSubTask.nModified == 0) {
+      return res.status(404).json({ error: "No Todo found to update" });
     }
-    res.json(user);
-  }
-  catch (err) {
-    return res.status(500).json({ error: err.message });
-  }
-
-});
-
-/// create task for workspace 
-router.post("/task", async (req, res) => {
-  const { WorkspaceID, task } = req.body;
-  try {
-    const workspace = await Workspace.findById(WorkspaceID);
-    if (!workspace) {
-      return res.status(404).json({ error: "Workspace not found" });
-    }
-    const newTask = new Task({
-      name: task.name,
-      description: task.description,
-      users: task.users,
-      subtasks: task.subtasks,
-      startDate: task.startDate,
-      deadline: task.deadline,
-      status: task.status,
-      workspaceId: WorkspaceID,
-    });
-    await newTask.save();
-    await Workspace.findByIdAndUpdate(
-      WorkspaceID,
-      { $push: { tasklist: newTask._id } },
-      { new: true }
-    );
-    res.json(newTask);
+    res.json({ status: "success", message: "Todo updated" });
   } catch (err) {
-    return res.status(500).json({ error: err.message });
+    return res.status(422).json({ error: err.message });
   }
-
 });

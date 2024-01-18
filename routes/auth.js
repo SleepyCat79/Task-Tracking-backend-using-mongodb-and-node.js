@@ -2,7 +2,6 @@ const express = require("express");
 const mongoose = require("mongoose");
 const router = express.Router();
 const User = mongoose.model("User");
-const UserWeb = mongoose.model("UserWeb");
 const jwt = require("jsonwebtoken");
 const JWT_SECRET = require("../secrets").jwtkey;
 
@@ -42,6 +41,5 @@ router.post("/signin", async (req, res) => {
 });
 
 // WEB-------------------------------------------------------------------------------------------------------
-
 
 module.exports = router;
