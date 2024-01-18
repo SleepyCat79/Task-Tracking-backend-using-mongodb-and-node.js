@@ -9,26 +9,41 @@ const TasklistSchema = new mongoose.Schema({
     type: String,
     required: false,
   },
-  users: {
-    type: Array,
+  users: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  }],
+  subtasks: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "SubTask",
     required: false,
-  },
-  subtasks: {
-    type: Array,
-    required: false,
+  }],
+  startDate: {
+    type: Date,
+    required: true,
   },
   deadline: {
     type: Date,
-    required: false,
+    required: true,
   },
   status: {
     type: String,
     required: true,
-    default: "To Do",
   },
   workspaceId: {
     type: String,
     required: true,
   },
 });
+const subTaskSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+  },
+  state: {
+    type: Boolean,
+  },
+});
+mongoose.model("SubTask", subTaskSchema);
 mongoose.model("Task", TasklistSchema);

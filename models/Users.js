@@ -14,11 +14,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  usertask: {
+  toDOList: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Task",
-  },
-
+    ref: "SubTask"
+  }],
 });
 
 mongoose.model("User", userSchema);

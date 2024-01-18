@@ -17,8 +17,7 @@ router.post("/signup", async (req, res) => {
   try {
     const user = new User({ name, email, password });
     await user.save();
-    const token = jwt.sign({ userId: user._id }, JWT_SECRET);
-    res.send({ token });
+    res.json({ status: "success" });
   } catch (err) {
     return res.status(422).json({ error: err.message });
   }
@@ -36,53 +35,13 @@ router.post("/signin", async (req, res) => {
   }
 
   if (user.password === password) {
-    const token = jwt.sign({ userId: user._id }, JWT_SECRET); // Generate token
-    res.json({ token, name: user.name });
+    res.json({ status: "success", userID: user._id, name: user.name });
   } else {
     return res.status(422).json({ error: "Invalid Email or password" });
   }
 });
 
 // WEB-------------------------------------------------------------------------------------------------------
-
-router.post("/signupWeb", async (req, res) => {
-  const { name, email, password } = req.body;
-  const existingUser = await UserWeb.findOne({ email });
-  if (existingUser) {
-    return res
-      .status(422)
-      .json({ error: "User already exists with that email" });
-  }
-  try {
-    const user = new UserWeb({ name, email, password });
-    await user.save();
-    // const token = jwt.sign({ userId: user._id }, JWT_SECRET);
-    res.send({
-      status: "success",
-    });
-  } catch (err) {
-    return res.status(422).json({ error: err.message });
-  }
-});
-router.post("/signinWeb", async (req, res) => {
-  const { email, password } = req.body;
-
-  if (!email || !password) {
-    return res.status(422).json({ error: "Please add email or password" });
-  }
-
-  const user = await UserWeb.findOne({ email });
-  if (!user) {
-    return res.status(422).json({ error: "Invalid Email or password" });
-  }
-
-  if (user.password === password) {
-    const id = user.id;
-    res.json({ userID: id, name: user.name });
-  } else {
-    return res.status(422).json({ error: "Invalid Email or password" });
-  }
-});
 
 
 module.exports = router;

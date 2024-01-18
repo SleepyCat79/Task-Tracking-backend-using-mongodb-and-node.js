@@ -5,7 +5,6 @@ const WorkspaceSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-
   description: {
     type: String,
     required: false,
@@ -16,12 +15,14 @@ const WorkspaceSchema = new mongoose.Schema({
       ref: "Task",
     },
   ],
-  users: {
-    type: Array,
-    required: false,
-  },
+  users: [[{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  }]],
   owner: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
     required: true,
   },
 });
