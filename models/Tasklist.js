@@ -16,13 +16,7 @@ const TasklistSchema = new mongoose.Schema({
       required: true,
     },
   ],
-  subtasks: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "SubTask",
-      required: false,
-    },
-  ],
+
   startDate: {
     type: Date,
     required: true,
@@ -48,6 +42,10 @@ const subTaskSchema = new mongoose.Schema({
   state: {
     type: Boolean,
     default: false,
+  },
+  taskID: {
+    type: String,
+    required: true,
   },
 });
 mongoose.model("SubTask", subTaskSchema);

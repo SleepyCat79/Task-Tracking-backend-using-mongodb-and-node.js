@@ -10,7 +10,8 @@ const JWT_SECRET = require("../secrets").jwtkey;
 
 //create task
 router.post("/Task", async (req, res) => {
-  const { workspaceID, name, description, startDate, deadline } = req.body;
+  const { workspaceID, name, description, startDate, deadline, userID } =
+    req.body;
   try {
     const workspace = await Workspace.findById(workspaceID);
     if (!workspace) {
@@ -24,6 +25,7 @@ router.post("/Task", async (req, res) => {
       startDate,
       deadline,
       status,
+      users: userID, // assuming userID is an array of user IDs
     });
     await task.save();
     await Workspace.updateOne(
@@ -37,11 +39,12 @@ router.post("/Task", async (req, res) => {
 });
 //get task
 router.get("/Task", async (req, res) => {
-  const { workspaceID } = req.query;
+  const { workspaceID, userID } = req.query;
   try {
-    const workspace = await Workspace.findById(workspaceID).populate(
-      "tasklist"
-    );
+    const workspace = await Workspace.findById(workspaceID).populate({
+      path: "tasklist",
+      match: { users: userID },
+    });
     if (!workspace) {
       return res.status(422).json({ error: "Workspace not found" });
     }
@@ -63,6 +66,8 @@ router.delete("/Task", async (req, res) => {
       { _id: workspaceID },
       { $pull: { tasklist: taskID } }
     );
+    // Use taskID directly in your query
+
     res.json({ status: "success", message: "Task deleted" });
   } catch (err) {
     return res.status(422).json({ error: err.message });
@@ -88,15 +93,15 @@ router.put("/Task", async (req, res) => {
   }
 });
 
-//get todolist for user with their id
+//get todolist for user with their id in specific task
 router.get("/toDoList", async (req, res) => {
-  const { userID } = req.body;
+  const { userID, taskID } = req.query;
   try {
-    const user = await User.findById(userID);
+    const user = await User.findById(userID).populate("toDOList");
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
-    const toDoList = user.toDOList;
+    const toDoList = user.toDOList.filter((todo) => todo.taskID === taskID);
     res.json({ toDoList });
   } catch (err) {
     return res.status(422).json({ error: err.message });
@@ -105,11 +110,12 @@ router.get("/toDoList", async (req, res) => {
 module.exports = router;
 //post todolist for user with their id
 router.post("/toDoList", async (req, res) => {
-  const { userID, name } = req.body;
+  const { userID, name, taskID } = req.body;
   try {
     const user = await User.findById(userID);
     const todo = new SubTask({
       name,
+      taskID,
     });
     await todo.save();
     await User.updateOne({ _id: user._id }, { $push: { toDOList: todo._id } });
@@ -117,7 +123,7 @@ router.post("/toDoList", async (req, res) => {
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
-    res.json({ message: "toDolist added", user }); // Include the user in the response
+    res.json({ message: "toDolist added" });
   } catch (err) {
     console.error(err); // Log any error
     return res.status(500).json({ error: err.message });
