@@ -45,7 +45,7 @@ const subTaskSchema = new mongoose.Schema({
   },
   taskID: {
     type: String,
-    required: true,
+    required: false,
   },
 });
 mongoose.model("SubTask", subTaskSchema);
