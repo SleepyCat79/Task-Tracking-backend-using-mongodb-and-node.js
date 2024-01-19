@@ -10,7 +10,7 @@ const JWT_SECRET = require("../secrets").jwtkey;
 
 //create task
 router.post("/Task", async (req, res) => {
-  const { workspaceID, name, description, startDate, deadline, userID } =
+  const { workspaceID, name, description, startDate, deadline, userEmails } =
     req.body;
   try {
     const workspace = await Workspace.findById(workspaceID);
@@ -18,6 +18,11 @@ router.post("/Task", async (req, res) => {
       return res.status(422).json({ error: "Workspace not found" });
     }
     const status = new Date(startDate) > new Date() ? "upcoming" : "inprogress";
+
+    // Find user IDs for the given emails
+    const users = await User.find({ email: { $in: userEmails } });
+    const userIds = users.map((user) => user._id);
+
     const task = new Task({
       name,
       description,
@@ -25,7 +30,7 @@ router.post("/Task", async (req, res) => {
       startDate,
       deadline,
       status,
-      users: userID, // assuming userID is an array of user IDs
+      users: userIds,
     });
     await task.save();
     await Workspace.updateOne(
