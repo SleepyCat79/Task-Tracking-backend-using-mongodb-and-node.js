@@ -60,7 +60,7 @@ router.get("/Task", async (req, res) => {
 });
 //delete task
 router.delete("/Task", async (req, res) => {
-  const { workspaceID, taskID } = req.body;
+  const { workspaceID, taskID } = req.query;
   try {
     const workspace = await Workspace.findById(workspaceID);
     if (!workspace) {
@@ -80,18 +80,14 @@ router.delete("/Task", async (req, res) => {
 });
 //update task
 router.put("/Task", async (req, res) => {
-  const { workspaceID, taskID, name, description, startDate, deadline } =
-    req.body;
+  const { workspaceID, taskID } = req.query;
+  const { status } = req.body;
   try {
     const workspace = await Workspace.findById(workspaceID);
     if (!workspace) {
       return res.status(422).json({ error: "Workspace not found" });
     }
-    const status = new Date(startDate) > new Date() ? "upcoming" : "inprogress";
-    await Task.updateOne(
-      { _id: taskID },
-      { name, description, startDate, deadline, status }
-    );
+    await Task.updateOne({ _id: taskID }, { status });
     res.json({ status: "success", message: "Task updated" });
   } catch (err) {
     return res.status(422).json({ error: err.message });
@@ -134,9 +130,29 @@ router.post("/toDoList", async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 });
+router.post("/toDoListE", async (req, res) => {
+  const { userEmail, name, taskID } = req.body;
+  try {
+    const user = await User.findOne({ email: userEmail });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    const todo = new SubTask({
+      name,
+      taskID,
+    });
+    await todo.save();
+    await User.updateOne({ _id: user._id }, { $push: { toDOList: todo._id } });
+    console.log(user); // Log the updated user
+    res.json({ message: "toDolist added" });
+  } catch (err) {
+    console.error(err); // Log any error
+    return res.status(500).json({ error: err.message });
+  }
+});
 //delete todolist for user with their id
 router.delete("/toDoList", async (req, res) => {
-  const { userID, todoID } = req.body;
+  const { userID, todoID } = req.query;
   try {
     const user = await User.findById(userID);
     if (!user) {
